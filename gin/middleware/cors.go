@@ -32,7 +32,7 @@ func (w *WebCors) BeanConstruct() {
 		w.config.AllowMethods = strings.Split(w.Methods, ",")
 	}
 	if w.Headers != "" {
-		w.config.AllowMethods = strings.Split(w.Headers, ",")
+		w.config.AllowHeaders = strings.Split(w.Headers, ",")
 	}
 	w.config.AllowCredentials = w.AllowCredentials
 	if w.ExposeHeaders != "" {
