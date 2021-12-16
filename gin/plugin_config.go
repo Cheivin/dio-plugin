@@ -7,7 +7,7 @@ import (
 
 const defaultTraceName = dio.DefaultTraceName
 
-func GinWeb(useLogger, useCors bool) dio.PluginConfig {
+func GinWeb(useLogger bool, options ...ginOption) dio.PluginConfig {
 	return func(d dio.Dio) {
 		if !d.HasProperty("app.port") {
 			d.SetDefaultPropertyMap(map[string]interface{}{
@@ -25,6 +25,17 @@ func GinWeb(useLogger, useCors bool) dio.PluginConfig {
 			d.Provide(middleware.WebLogger{})
 		}
 		d.Provide(middleware.WebRecover{})
+		for _, option := range options {
+			option(d)
+		}
+		d.Provide(Controller{})
+	}
+}
+
+type ginOption func(dio.Dio)
+
+func WithCors(useCors bool) ginOption {
+	return func(d dio.Dio) {
 		if useCors {
 			if !d.HasProperty("app.web.cors") {
 				d.SetDefaultProperty("app.web.cors", map[string]interface{}{
@@ -33,11 +44,10 @@ func GinWeb(useLogger, useCors bool) dio.PluginConfig {
 					"header":            "",
 					"allow-credentials": true,
 					"expose-header":     "",
-					"max-age":           43200,
+					"max-age":           "12h",
 				})
 			}
 			d.Provide(middleware.WebCors{})
 		}
-		d.Provide(Controller{})
 	}
 }
