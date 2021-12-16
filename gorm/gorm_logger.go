@@ -10,13 +10,11 @@ import (
 )
 
 type GormLogger struct {
-	Level                     int         `value:"gorm.log.level"`
-	SlowThreshold             string      `value:"gorm.log.slow-log"`
-	IgnoreRecordNotFoundError bool        `value:"gorm.log.ignore-notfound"`
-	Log                       *system.Log `aware:""`
-
-	slowThreshold time.Duration
-	level         logger.LogLevel
+	Level                     int           `value:"gorm.log.level"`
+	SlowThreshold             time.Duration `value:"gorm.log.slow-log"`
+	IgnoreRecordNotFoundError bool          `value:"gorm.log.ignore-notfound"`
+	Log                       *system.Log   `aware:""`
+	level                     logger.LogLevel
 }
 
 func (l *GormLogger) BeanName() string {
@@ -29,13 +27,6 @@ func (l *GormLogger) BeanConstruct() {
 		l.level = logger.Info
 	} else {
 		l.level = logger.LogLevel(l.Level)
-	}
-	if l.SlowThreshold != "" {
-		if slowThreshold, err := time.ParseDuration(l.SlowThreshold); err != nil {
-			panic(err)
-		} else {
-			l.slowThreshold = slowThreshold
-		}
 	}
 }
 
@@ -50,7 +41,6 @@ func (l *GormLogger) LogMode(level logger.LogLevel) logger.Interface {
 		Level:                     int(level),
 		SlowThreshold:             l.SlowThreshold,
 		IgnoreRecordNotFoundError: l.IgnoreRecordNotFoundError,
-		slowThreshold:             l.slowThreshold,
 		level:                     level,
 		Log:                       l.Log,
 	}
@@ -89,7 +79,7 @@ func (l GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (strin
 			} else {
 				l.Log.Error(ctx, err.Error(), "Cost", float64(elapsed.Nanoseconds())/1e6, "Rows", rows, "SQL", sql)
 			}
-		case l.slowThreshold != 0 && elapsed > l.slowThreshold && l.level >= logger.Warn:
+		case l.SlowThreshold != 0 && elapsed > l.SlowThreshold && l.level >= logger.Warn:
 			sql, rows := fc()
 			slowLog := fmt.Sprintf("SLOW SQL >= %v", l.SlowThreshold)
 			if rows == -1 {

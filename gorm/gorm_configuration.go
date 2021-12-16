@@ -20,16 +20,16 @@ func (c *GormOptions) BeanName() string {
 }
 
 type GormConfiguration struct {
-	Username    string `value:"gorm.username"`
-	Password    string `value:"gorm.password"`
-	Host        string `value:"gorm.host"`
-	Port        int    `value:"gorm.port"`
-	Database    string `value:"gorm.database"`
-	Parameters  string `value:"gorm.parameters"`
-	MaxIdle     int    `value:"gorm.pool.max-idle"`
-	MaxOpen     int    `value:"gorm.pool.max-open"`
-	MaxLifeTime string `value:"gorm.pool.max-life-time"`
-	MaxIdleTime string `value:"gorm.pool.max-idle-time"`
+	Username    string        `value:"gorm.username"`
+	Password    string        `value:"gorm.password"`
+	Host        string        `value:"gorm.host"`
+	Port        int           `value:"gorm.port"`
+	Database    string        `value:"gorm.database"`
+	Parameters  string        `value:"gorm.parameters"`
+	MaxIdle     int           `value:"gorm.pool.max-idle"`
+	MaxOpen     int           `value:"gorm.pool.max-open"`
+	MaxLifeTime time.Duration `value:"gorm.pool.max-life-time"`
+	MaxIdleTime time.Duration `value:"gorm.pool.max-idle-time"`
 	db          *gorm.DB
 	Logger      *GormLogger `aware:""`
 	Log         *system.Log `aware:""`
@@ -74,19 +74,11 @@ func (c *GormConfiguration) BeanConstruct(container di.DI) {
 	if err != nil {
 		panic(err)
 	}
-	if c.MaxLifeTime != "" {
-		if maxLifetime, err := time.ParseDuration(c.MaxLifeTime); err != nil {
-			panic(err)
-		} else {
-			sqlDB.SetConnMaxLifetime(maxLifetime)
-		}
+	if c.MaxLifeTime > 0 {
+		sqlDB.SetConnMaxLifetime(c.MaxLifeTime)
 	}
-	if c.MaxIdleTime != "" {
-		if maxIdleTime, err := time.ParseDuration(c.MaxIdleTime); err != nil {
-			panic(err)
-		} else {
-			sqlDB.SetConnMaxIdleTime(maxIdleTime)
-		}
+	if c.MaxIdleTime > 0 {
+		sqlDB.SetConnMaxIdleTime(c.MaxIdleTime)
 	}
 	sqlDB.SetMaxIdleConns(c.MaxIdle)
 	sqlDB.SetMaxOpenConns(c.MaxOpen)

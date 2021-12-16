@@ -6,7 +6,7 @@
 
 - 安装 `go get github.com/cheivin/dio-plugin/gin`
 
-- 配置 `dio.use(web.GinWeb(useLogger, useCors))`
+- 配置 `dio.use(web.GinWeb(useLogger, web.WithCors(true)))`
 
 - Dio中注入
 

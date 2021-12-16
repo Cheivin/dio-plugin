@@ -10,14 +10,14 @@ import (
 
 // WebCors 跨域
 type WebCors struct {
-	Web              *gin.Engine `aware:"web"`
-	Log              *system.Log `aware:""`
-	Origins          string      `value:"app.web.cors.origin"`
-	Methods          string      `value:"app.web.cors.method"`
-	Headers          string      `value:"app.web.cors.header"`
-	AllowCredentials bool        `value:"app.web.cors.allow-credentials"`
-	ExposeHeaders    string      `value:"app.web.cors.expose-header"`
-	MaxAge           int         `value:"app.web.cors.max-age"` // 过期时间,单位秒
+	Web              *gin.Engine   `aware:"web"`
+	Log              *system.Log   `aware:""`
+	Origins          string        `value:"app.web.cors.origin"`
+	Methods          string        `value:"app.web.cors.method"`
+	Headers          string        `value:"app.web.cors.header"`
+	AllowCredentials bool          `value:"app.web.cors.allow-credentials"`
+	ExposeHeaders    string        `value:"app.web.cors.expose-header"`
+	MaxAge           time.Duration `value:"app.web.cors.max-age"` // 过期时间,单位秒
 	config           cors.Config
 }
 
@@ -38,8 +38,9 @@ func (w *WebCors) BeanConstruct() {
 	if w.ExposeHeaders != "" {
 		w.config.ExposeHeaders = strings.Split(w.ExposeHeaders, ",")
 	}
-	if w.MaxAge > 0 {
-		w.config.MaxAge = time.Duration(w.MaxAge) * time.Second
+
+	if w.MaxAge.Seconds() > 0 {
+		w.config.MaxAge = w.MaxAge
 	}
 }
 
