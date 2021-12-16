@@ -33,7 +33,7 @@
 | app.web.cors.header            |              | 允许跨域的header,多个用`,`分割。useCors为true时生效      |
 | app.web.cors.allow-credentials | true         | 是否允许发送cookie。useCors为true时生效              |
 | app.web.cors.expose-header     |              | 暴露的header,多个用`,`分割。useCors为true时生效        |
-| app.web.cors.max-age           | 43200        | 预检有效期,单位秒。useCors为true时生效                 |
+| app.web.cors.max-age           | 12h          | 预检有效期,duration格式。useCors为true时生效          |
 
 ## gorm
 
