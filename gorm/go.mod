@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/cheivin/di v0.1.4
-	github.com/cheivin/dio-core v0.0.0-20211213072630-2735f358bb8e
+	github.com/cheivin/dio-core v0.0.2-0.20211223095625-c1e411595dce
 	gorm.io/driver/mysql v1.2.1
 	gorm.io/gorm v1.22.4
 )
