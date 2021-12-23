@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/cheivin/di v0.1.4
-	github.com/cheivin/dio-core v0.0.0-20211213072630-2735f358bb8e
+	github.com/cheivin/dio-core v0.0.2-0.20211223095625-c1e411595dce
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.7
 	github.com/satori/go.uuid v1.2.0
