@@ -1,42 +1,75 @@
 package middleware
 
 import (
+	"github.com/cheivin/di"
 	"github.com/cheivin/dio-core/system"
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
+	"go.uber.org/zap"
 	"net/http"
 	"strings"
 	"time"
 )
 
-// WebLogger 日志
-type WebLogger struct {
-	Web         *gin.Engine `aware:"web"`
-	Log         *system.Log `aware:""`
-	Skips       string      `value:"app.web.log.skip-path"`
-	TraceName   string      `value:"app.web.log.trace-name"`
-	skip        map[string]struct{}
-	idGenerator func(c *gin.Context) string
+type logConfig struct {
+	Skips     string `value:"skip-path"`
+	TraceName string `value:"trace-name"`
 }
 
-func (w *WebLogger) BeanConstruct() {
-	skipPaths := strings.Split(w.Skips, ",")
-	w.skip = make(map[string]struct{}, len(skipPaths))
+func (c logConfig) SkipPaths() map[string]struct{} {
+	skipPaths := strings.Split(c.Skips, ",")
+	skipMap := make(map[string]struct{}, len(skipPaths))
 	for _, path := range skipPaths {
 		if path != "" {
-			w.skip[path] = struct{}{}
+			skipMap[path] = struct{}{}
 		}
 	}
-	w.idGenerator = func(_ *gin.Context) string {
-		return uuid.NewV4().String()
+	return skipMap
+}
+
+type (
+	WebTracert interface {
+		Trace(c *gin.Context, traceName string) string
+	}
+
+	// WebLogger 日志
+	WebLogger struct {
+		Log     *system.Log `aware:""`
+		Web     *gin.Engine `aware:"web"`
+		Tracert WebTracert  `aware:"omitempty"`
+		config  logConfig
+		skip    map[string]struct{}
+	}
+
+	defaultWebTracert struct {
+		UUID uuid.UUID
+	}
+)
+
+func newDefaultWebTracert() WebTracert {
+	return &defaultWebTracert{
+		UUID: uuid.NewV4(),
 	}
 }
 
-func (w *WebLogger) SetIdGenerator(idGenerator func(c *gin.Context) string) {
-	w.idGenerator = idGenerator
+func (t defaultWebTracert) Trace(c *gin.Context, traceName string) string {
+	reqId := c.GetHeader(traceName)
+	if reqId == "" {
+		reqId = t.UUID.String()
+		c.Header(traceName, reqId)
+	}
+	c.Set(traceName, reqId)
+	return reqId
 }
 
-func (w *WebLogger) AfterPropertiesSet() {
+func (w *WebLogger) AfterPropertiesSet(container di.DI) {
+	w.Log = w.Log.WithOptions(zap.WithCaller(false))
+	if w.Tracert == nil {
+		w.Tracert = newDefaultWebTracert()
+	}
+
+	w.config = container.LoadProperties("app.web.log.", logConfig{}).(logConfig)
+	w.skip = w.config.SkipPaths()
 	w.Web.Use(w.log)
 }
 
@@ -52,16 +85,9 @@ func (w *WebLogger) log(c *gin.Context) {
 	path := c.Request.URL.Path
 	raw := c.Request.URL.RawQuery
 
-	// 设置id
-	if w.TraceName != "" {
-		reqId := c.GetHeader(w.TraceName)
+	// 跟踪id
+	w.Tracert.Trace(c, w.config.TraceName)
 
-		if reqId == "" {
-			reqId = w.idGenerator(c)
-			c.Header(w.TraceName, reqId)
-		}
-		c.Set(w.Log.TraceName, reqId)
-	}
 	// 处理请求
 	c.Next()
 
@@ -86,8 +112,8 @@ func (w *WebLogger) log(c *gin.Context) {
 		"Path", path,
 		"BodySize", c.Writer.Size(),
 	}
-	errMsg := c.Errors.ByType(gin.ErrorTypePrivate).String()
-	if errMsg != "" {
+	errMsg := c.Errors.Last()
+	if errMsg != nil {
 		params = append(params, "ErrorMessage", errMsg)
 		w.Log.Error(c, "gin-http", params...)
 	} else {

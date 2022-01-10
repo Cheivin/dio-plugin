@@ -1,49 +1,48 @@
 package middleware
 
 import (
-	"github.com/cheivin/dio-core/system"
+	"github.com/cheivin/di"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"strings"
 	"time"
 )
 
+type corsConfig struct {
+	Origins          string        `value:"origin"`
+	Methods          string        `value:"method"`
+	Headers          string        `value:"header"`
+	AllowCredentials bool          `value:"allow-credentials"`
+	ExposeHeaders    string        `value:"expose-header"`
+	MaxAge           time.Duration `value:"max-age"` // 过期时间,单位秒
+}
+
 // WebCors 跨域
 type WebCors struct {
-	Web              *gin.Engine   `aware:"web"`
-	Log              *system.Log   `aware:""`
-	Origins          string        `value:"app.web.cors.origin"`
-	Methods          string        `value:"app.web.cors.method"`
-	Headers          string        `value:"app.web.cors.header"`
-	AllowCredentials bool          `value:"app.web.cors.allow-credentials"`
-	ExposeHeaders    string        `value:"app.web.cors.expose-header"`
-	MaxAge           time.Duration `value:"app.web.cors.max-age"` // 过期时间,单位秒
-	config           cors.Config
+	Web *gin.Engine `aware:"web"`
 }
 
-func (w *WebCors) BeanConstruct() {
-	w.config = cors.DefaultConfig()
-	if w.Origins != "" {
-		w.config.AllowOrigins = strings.Split(w.Origins, ",")
+func (w *WebCors) AfterPropertiesSet(container di.DI) {
+	cfg := container.LoadProperties("app.web.cors.", corsConfig{}).(corsConfig)
+	corsCfg := cors.DefaultConfig()
+	if cfg.Origins != "" {
+		corsCfg.AllowOrigins = strings.Split(cfg.Origins, ",")
 	} else {
-		w.config.AllowAllOrigins = true
+		corsCfg.AllowAllOrigins = true
 	}
-	if w.Methods != "" {
-		w.config.AllowMethods = strings.Split(w.Methods, ",")
+	if cfg.Methods != "" {
+		corsCfg.AllowMethods = strings.Split(cfg.Methods, ",")
 	}
-	if w.Headers != "" {
-		w.config.AllowHeaders = strings.Split(w.Headers, ",")
+	if cfg.Headers != "" {
+		corsCfg.AllowHeaders = strings.Split(cfg.Headers, ",")
 	}
-	w.config.AllowCredentials = w.AllowCredentials
-	if w.ExposeHeaders != "" {
-		w.config.ExposeHeaders = strings.Split(w.ExposeHeaders, ",")
+	corsCfg.AllowCredentials = cfg.AllowCredentials
+	if cfg.ExposeHeaders != "" {
+		corsCfg.ExposeHeaders = strings.Split(cfg.ExposeHeaders, ",")
+	}
+	if cfg.MaxAge.Seconds() > 0 {
+		corsCfg.MaxAge = cfg.MaxAge
 	}
 
-	if w.MaxAge.Seconds() > 0 {
-		w.config.MaxAge = w.MaxAge
-	}
-}
-
-func (w *WebCors) AfterPropertiesSet() {
-	w.Web.Use(cors.New(w.config))
+	w.Web.Use(cors.New(corsCfg))
 }

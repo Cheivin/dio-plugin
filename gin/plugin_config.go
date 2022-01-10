@@ -1,14 +1,14 @@
 package web
 
 import (
-	"github.com/cheivin/dio-core"
+	core "github.com/cheivin/dio-core"
 	"github.com/cheivin/dio-plugin/gin/middleware"
 )
 
-const defaultTraceName = dio.DefaultTraceName
+const defaultTraceName = core.DefaultTraceName
 
-func GinWeb(useLogger bool, options ...ginOption) dio.PluginConfig {
-	return func(d dio.Dio) {
+func GinWeb(useLogger bool, options ...ginOption) core.PluginConfig {
+	return func(d core.Dio) {
 		if !d.HasProperty("app.port") {
 			d.SetDefaultPropertyMap(map[string]interface{}{
 				"app.port": 8080,
@@ -32,10 +32,10 @@ func GinWeb(useLogger bool, options ...ginOption) dio.PluginConfig {
 	}
 }
 
-type ginOption func(dio.Dio)
+type ginOption func(core.Dio)
 
 func WithCors(useCors bool) ginOption {
-	return func(d dio.Dio) {
+	return func(d core.Dio) {
 		if useCors {
 			if !d.HasProperty("app.web.cors") {
 				d.SetDefaultProperty("app.web.cors", map[string]interface{}{
@@ -49,5 +49,17 @@ func WithCors(useCors bool) ginOption {
 			}
 			d.Provide(middleware.WebCors{})
 		}
+	}
+}
+
+func WithTracert(tracert middleware.WebTracert) ginOption {
+	return func(d core.Dio) {
+		d.Provide(tracert)
+	}
+}
+
+func WithErrorHandler(errorHandler middleware.WebErrorHandler) ginOption {
+	return func(d core.Dio) {
+		d.Provide(errorHandler)
 	}
 }
