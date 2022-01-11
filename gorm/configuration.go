@@ -10,6 +10,12 @@ import (
 	"strings"
 )
 
+const (
+	defaultPrefix = "gorm."
+	multiPrefix   = "gorm.multi."
+	enableMulti   = defaultPrefix + "enable-multi"
+)
+
 type configuration struct {
 	log                 *system.Log
 	opts                []gorm.Option
@@ -23,7 +29,6 @@ func (c *configuration) BeanName() string {
 }
 
 func (c *configuration) BeanConstruct(container di.DI) {
-	defaultPrefix := "gorm."
 	// 系统日志
 	bean, _ := container.GetByType(system.Log{})
 	c.log = bean.(*system.Log)
@@ -39,7 +44,7 @@ func (c *configuration) BeanConstruct(container di.DI) {
 	c.defaultLogProperty = container.LoadProperties(defaultPrefix, LogProperty{}).(LogProperty)
 
 	var tags []string
-	if val := container.GetProperty("gorm.multi"); val != nil {
+	if val := container.GetProperty(enableMulti); val != nil {
 		tags = strings.Split(val.(string), ",")
 	}
 	if len(tags) == 0 {
@@ -52,7 +57,7 @@ func (c *configuration) BeanConstruct(container di.DI) {
 		return
 	}
 	for _, tag := range tags {
-		prefix := defaultPrefix + tag + "."
+		prefix := multiPrefix + tag + "."
 		// db连接信息
 		dbProperty := container.LoadProperties(prefix, DBProperty{}).(DBProperty)
 		dbProperty.Merge(c.defaultDBProperty)
@@ -66,10 +71,13 @@ func (c *configuration) BeanConstruct(container di.DI) {
 		db := c.generateDB(dbProperty, poolProperty, logProperty)
 		// 注册db
 		baseDao := dao.New(db)
-		container.RegisterNamedBean("gormFor"+tag, db)
-		container.RegisterNamedBean(tag, baseDao)
-
-		c.log.Info(container.Context(), "Gorm library loaded db "+tag)
+		// 设置注册的beanName
+		beanName := tag
+		if dbProperty.DaoName != "" {
+			beanName = dbProperty.DaoName
+		}
+		container.RegisterNamedBean(beanName, baseDao)
+		c.log.Info(container.Context(), "Gorm library loaded dao named "+beanName+" for db "+tag)
 	}
 }
 

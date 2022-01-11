@@ -41,7 +41,7 @@ func MultiGorm(multi []string, options ...gorm.Option) core.PluginConfig {
 				"log.level": 4,
 			})
 		}
-		d.SetProperty("gorm.multi", strings.Join(multi, ","))
+		d.SetProperty(enableMulti, strings.Join(multi, ","))
 		d.RegisterBean(&gormOptions{Options: options})
 		d.Provide(configuration{})
 	}

@@ -23,6 +23,7 @@ type DBProperty struct {
 	Port       int    `value:"port"`
 	Database   string `value:"database"`
 	Parameters string `value:"parameters"`
+	DaoName    string `value:"daoName"`
 }
 
 func (p *DBProperty) parseParameters() {
