@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/cheivin/dio-core/system"
+	"github.com/cheivin/dio-core"
 	"github.com/cheivin/dio-plugin/gin/errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -14,8 +14,8 @@ type (
 
 	// WebRecover 全局异常
 	WebRecover struct {
+		Log          core.Log        `aware:""`
 		Web          *gin.Engine     `aware:"web"`
-		Log          *system.Log     `aware:""`
 		ErrorHandler WebErrorHandler `aware:"omitempty"`
 	}
 

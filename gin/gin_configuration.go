@@ -4,16 +4,15 @@ import (
 	"context"
 	"fmt"
 	"github.com/cheivin/di"
-	"github.com/cheivin/dio-core/system"
+	"github.com/cheivin/dio-core"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
 
 type ginContainer struct {
-	Port   int         `value:"app.port"`
-	Log    *system.Log `aware:""`
+	Port   int      `value:"app.port"`
+	Log    core.Log `aware:""`
 	router *gin.Engine
 	server *http.Server
 }
@@ -37,7 +36,7 @@ func (w *ginContainer) AfterPropertiesSet(container di.DI) {
 		Addr:    fmt.Sprintf(":%d", w.Port),
 	}
 	w.Log.Info(container.Context(), "Gin Web Container loaded")
-	w.Log = w.Log.WithOptions(zap.WithCaller(false))
+	w.Log = w.Log.Skip(-1)
 }
 
 // Initialized DI加载完成后，启动服务

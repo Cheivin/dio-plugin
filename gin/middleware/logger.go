@@ -2,10 +2,8 @@ package middleware
 
 import (
 	"github.com/cheivin/di"
-	"github.com/cheivin/dio-core/system"
+	"github.com/cheivin/dio-core"
 	"github.com/gin-gonic/gin"
-	uuid "github.com/satori/go.uuid"
-	"go.uber.org/zap"
 	"net/http"
 	"strings"
 	"time"
@@ -34,7 +32,7 @@ type (
 
 	// WebLogger 日志
 	WebLogger struct {
-		Log     *system.Log `aware:""`
+		Log     core.Log    `aware:""`
 		Web     *gin.Engine `aware:"web"`
 		Tracert WebTracert  `aware:"omitempty"`
 		config  logConfig
@@ -42,20 +40,17 @@ type (
 	}
 
 	defaultWebTracert struct {
-		UUID uuid.UUID
 	}
 )
 
 func newDefaultWebTracert() WebTracert {
-	return &defaultWebTracert{
-		UUID: uuid.NewV4(),
-	}
+	return &defaultWebTracert{}
 }
 
 func (t defaultWebTracert) Trace(c *gin.Context, traceName string) string {
 	reqId := c.GetHeader(traceName)
 	if reqId == "" {
-		reqId = t.UUID.String()
+		reqId = core.UUID()
 		c.Header(traceName, reqId)
 	}
 	c.Set(traceName, reqId)
@@ -63,7 +58,7 @@ func (t defaultWebTracert) Trace(c *gin.Context, traceName string) string {
 }
 
 func (w *WebLogger) AfterPropertiesSet(container di.DI) {
-	w.Log = w.Log.WithOptions(zap.WithCaller(false))
+	w.Log = w.Log.Skip(-1)
 	if w.Tracert == nil {
 		w.Tracert = newDefaultWebTracert()
 	}
