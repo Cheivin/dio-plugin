@@ -3,7 +3,7 @@ package orm
 import (
 	"fmt"
 	"github.com/cheivin/di"
-	"github.com/cheivin/dio-core/system"
+	"github.com/cheivin/dio-core"
 	"github.com/cheivin/dio-plugin/gorm/dao"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -17,7 +17,7 @@ const (
 )
 
 type configuration struct {
-	log                 *system.Log
+	log                 core.Log
 	opts                []gorm.Option
 	defaultDBProperty   DBProperty
 	defaultPoolProperty PoolProperty
@@ -30,8 +30,8 @@ func (c *configuration) BeanName() string {
 
 func (c *configuration) BeanConstruct(container di.DI) {
 	// 系统日志
-	bean, _ := container.GetByType(system.Log{})
-	c.log = bean.(*system.Log)
+	bean, _ := container.GetByType(&c.log)
+	c.log = bean.(core.Log)
 	// 配置信息
 	if options, ok := container.GetByType(gormOptions{}); ok {
 		c.opts = options.(*gormOptions).Options

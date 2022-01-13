@@ -4,19 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cheivin/dio-core/system"
+	core "github.com/cheivin/dio-core"
 	"gorm.io/gorm/logger"
 	"time"
 )
 
 type gormLogger struct {
-	log                       *system.Log   // `aware:""`
+	log                       core.Log      // `aware:""`
 	slowThreshold             time.Duration // `value:"gorm.log.slow-log"`
 	ignoreRecordNotFoundError bool          // `value:"gorm.log.ignore-notfound"`
 	level                     logger.LogLevel
 }
 
-func newLogger(log *system.Log, property LogProperty) logger.Interface {
+func newLogger(log core.Log, property LogProperty) logger.Interface {
 	return &gormLogger{
 		log:                       log.Skip(4),
 		level:                     property.LogLevel(),
