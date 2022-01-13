@@ -80,28 +80,6 @@ func (dao *Dao) Where(wrapper *wrapper.Query) *gorm.DB {
 	return dao.scopeQueryAndOrder(wrapper)
 }
 
-func (dao *Dao) scopeQuery(wrapper *wrapper.Query) *gorm.DB {
-	if wrapper == nil {
-		return dao.db
-	}
-	fragments := wrapper.Build()
-	query, args, groupBys, _ := fragments[0].(string), fragments[1].([]interface{}), fragments[2].([]string), fragments[3].(string)
-	db := dao.db
-	if query != "" {
-		db = db.Where(query, args...)
-	}
-	if len(groupBys) > 0 {
-		groupBy := clause.GroupBy{Columns: make([]clause.Column, len(groupBys))}
-		for i := range groupBys {
-			group := groupBys[i]
-			fields := strings.FieldsFunc(group, utils.IsValidDBNameChar)
-			groupBy.Columns[i] = clause.Column{Name: group, Raw: len(fields) != 1}
-		}
-		db.Statement.AddClause(groupBy)
-	}
-	return db
-}
-
 func (dao *Dao) scopeQueryAndOrder(wrapper *wrapper.Query) *gorm.DB {
 	if wrapper == nil {
 		return dao.db
@@ -133,7 +111,7 @@ func (dao *Dao) FindOne(cause *wrapper.Query, target interface{}) (ok bool, err 
 	if cause == nil {
 		cause = wrapper.Q()
 	}
-	db := dao.scopeQuery(cause).Limit(1).Find(target)
+	db := dao.scopeQueryAndOrder(cause).Limit(1).Find(target)
 	return db.RowsAffected > 0, db.Error
 }
 
@@ -153,7 +131,7 @@ func (dao *Dao) List(cause *wrapper.Query, target interface{}, limit ...int) err
 }
 
 func (dao *Dao) Page(cause *wrapper.Query, target interface{}, page, size int) (total int64, err error) {
-	err = dao.scopeQuery(cause).Count(&total).Error
+	err = dao.scopeQueryAndOrder(cause).Count(&total).Error
 	if err != nil {
 		return
 	}
@@ -165,7 +143,7 @@ func (dao *Dao) Page(cause *wrapper.Query, target interface{}, page, size int) (
 }
 
 func (dao *Dao) Delete(db *gorm.DB, cause *wrapper.Query) (int64, error) {
-	db = dao.scopeQuery(cause).Delete(dao.dst)
+	db = dao.scopeQueryAndOrder(cause).Delete(dao.dst)
 	return db.RowsAffected, db.Error
 }
 
@@ -177,10 +155,10 @@ func (dao *Dao) Update(update *wrapper.Update) (int64, error) {
 	if update == nil {
 		update = wrapper.U()
 	}
-	db := dao.scopeQuery(update.Query()).Updates(update.Data())
+	db := dao.scopeQueryAndOrder(update.Query()).Updates(update.Data())
 	return db.RowsAffected, db.Error
 }
 
 func (dao *Dao) Sum(field string, cause *wrapper.Query, target interface{}) (err error) {
-	return dao.Select("COALESCE(SUM(" + field + "), 0)").scopeQuery(cause).Scan(target).Error
+	return dao.Select("COALESCE(SUM(" + field + "), 0)").scopeQueryAndOrder(cause).Scan(target).Error
 }
