@@ -94,7 +94,7 @@ func (p LogProperty) LogLevel() logger.LogLevel {
 	return logger.LogLevel(p.Level)
 }
 
-func (p LogProperty) Merge(property LogProperty) {
+func (p *LogProperty) Merge(property LogProperty) {
 	if p.Level == 0 && property.Level > 0 {
 		p.Level = property.Level
 	}
