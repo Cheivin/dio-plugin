@@ -142,13 +142,30 @@ func (dao *Dao) Page(cause *wrapper.Query, target interface{}, page, size int) (
 	return
 }
 
-func (dao *Dao) Delete(db *gorm.DB, cause *wrapper.Query) (int64, error) {
-	db = dao.scopeQueryAndOrder(cause).Delete(dao.dst)
+func (dao *Dao) Delete(cause *wrapper.Query) (int64, error) {
+	db := dao.scopeQueryAndOrder(cause).Delete(dao.dst)
 	return db.RowsAffected, db.Error
+}
+
+func (dao *Dao) Exist(cause *wrapper.Query) (exist bool, err error) {
+	_, err = dao.Select("1").FindOne(cause, &exist)
+	return
 }
 
 func (dao *Dao) Insert(value interface{}) error {
 	return dao.db.Create(value).Error
+}
+
+func (dao *Dao) InsertIgnore(value interface{}) error {
+	return dao.db.Clauses(clause.Insert{Modifier: "IGNORE"}).Create(value).Error
+}
+
+func (dao *Dao) Replace(value interface{}) error {
+	return dao.db.Clauses(clause.OnConflict{UpdateAll: true}).Create(value).Error
+}
+
+func (dao *Dao) Upsert(value interface{}, update *wrapper.Update) error {
+	return dao.db.Clauses(clause.OnConflict{DoUpdates: clause.Assignments(update.Data())}).Create(value).Error
 }
 
 func (dao *Dao) Update(update *wrapper.Update) (int64, error) {
