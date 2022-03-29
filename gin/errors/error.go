@@ -25,30 +25,37 @@ func (e *Error) Cause() error {
 	return e.error
 }
 
-func (e *Error) CauseBy(cause error) Error {
-	copyE := *e
-	copyE.error = cause
-	return copyE
+func (e *Error) Unwrap() error {
+	if e.error == nil {
+		return errors.New(e.Msg)
+	}
+	return e.error
 }
 
-func Err(code int, msg string, cause error) Error {
-	return Error{
+func (e *Error) CauseBy(cause error) *Error {
+	copyE := *e
+	copyE.error = cause
+	return &copyE
+}
+
+func Err(code int, msg string, cause error) *Error {
+	return &Error{
 		error: cause,
 		Code:  code,
 		Msg:   msg,
 	}
 }
 
-func ErrMsg(code int, msg string) Error {
-	return Error{
+func ErrMsg(code int, msg string) *Error {
+	return &Error{
 		error: errors.New(msg),
 		Code:  code,
 		Msg:   msg,
 	}
 }
 
-func ErrWith(err Error, cause error) Error {
-	return Error{
+func ErrWith(err Error, cause error) *Error {
+	return &Error{
 		error: cause,
 		Code:  err.Code,
 		Msg:   err.Msg,

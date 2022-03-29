@@ -9,7 +9,7 @@ import (
 
 type (
 	WebErrorHandler interface {
-		OnError(c *gin.Context, err errors.Error)
+		OnError(c *gin.Context, err *errors.Error)
 	}
 
 	// WebRecover 全局异常
@@ -27,7 +27,7 @@ func newDefaultWebErrorHandler() WebErrorHandler {
 	return &defaultWebErrorHandler{}
 }
 
-func (d defaultWebErrorHandler) OnError(c *gin.Context, err errors.Error) {
+func (d defaultWebErrorHandler) OnError(c *gin.Context, err *errors.Error) {
 	c.String(err.Code, err.Error())
 }
 
@@ -55,18 +55,22 @@ func (w *WebRecover) recover(c *gin.Context) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch r.(type) {
+			case *errors.Error:
+				err := r.(*errors.Error)
+				_ = c.Error(err)
+				w.ErrorHandler.OnError(c, err)
 			case errors.Error:
 				err := r.(errors.Error)
 				_ = c.Error(&err)
-				w.ErrorHandler.OnError(c, err)
+				w.ErrorHandler.OnError(c, &err)
 			case error:
 				e := r.(error)
 				err := errors.Err(http.StatusInternalServerError, e.Error(), e)
-				_ = c.Error(&err)
+				_ = c.Error(err)
 				w.ErrorHandler.OnError(c, err)
 			case string:
 				err := errors.ErrMsg(http.StatusInternalServerError, r.(string))
-				_ = c.Error(&err)
+				_ = c.Error(err)
 				w.ErrorHandler.OnError(c, err)
 			default:
 				w.Log.Error(c, "Web server panic", "panic", r)
