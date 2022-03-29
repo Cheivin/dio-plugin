@@ -82,11 +82,11 @@ func (dao *Dao) Where(wrapper *wrapper.Query) *gorm.DB {
 
 func (dao *Dao) scopeQueryAndOrder(wrapper *wrapper.Query) *gorm.DB {
 	if wrapper == nil {
-		return dao.db
+		return dao.db.Scopes()
 	}
 	fragments := wrapper.Build()
 	query, args, groupBys, orderBy := fragments[0].(string), fragments[1].([]interface{}), fragments[2].([]string), fragments[3].(string)
-	db := dao.db
+	db := dao.db.Scopes()
 	if query != "" {
 		db = db.Where(query, args...)
 	}
