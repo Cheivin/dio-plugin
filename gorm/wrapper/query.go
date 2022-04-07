@@ -1,6 +1,9 @@
 package wrapper
 
 import (
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+	"gorm.io/gorm/utils"
 	"reflect"
 	"strings"
 )
@@ -239,4 +242,28 @@ func (q *Query) build() (string, []interface{}, []string, string) {
 		}
 	}
 	return b.String(), q.args, q.group, orderStr
+}
+
+func (q *Query) Scope(db *gorm.DB) *gorm.DB {
+	if q == nil {
+		return db
+	}
+	fragments := q.Build()
+	query, args, groupBys, orderBy := fragments[0].(string), fragments[1].([]interface{}), fragments[2].([]string), fragments[3].(string)
+	if query != "" {
+		db = db.Where(query, args...)
+	}
+	if len(groupBys) > 0 {
+		groupBy := clause.GroupBy{Columns: make([]clause.Column, len(groupBys))}
+		for i := range groupBys {
+			group := groupBys[i]
+			fields := strings.FieldsFunc(group, utils.IsValidDBNameChar)
+			groupBy.Columns[i] = clause.Column{Name: group, Raw: len(fields) != 1}
+		}
+		db.Statement.AddClause(groupBy)
+	}
+	if orderBy != "" {
+		db = db.Order(orderBy)
+	}
+	return db
 }

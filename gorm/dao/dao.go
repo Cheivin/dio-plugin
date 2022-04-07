@@ -6,8 +6,6 @@ import (
 	"github.com/cheivin/dio-plugin/gorm/wrapper"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"gorm.io/gorm/utils"
-	"strings"
 )
 
 type Dao struct {
@@ -81,28 +79,7 @@ func (dao *Dao) Where(wrapper *wrapper.Query) *gorm.DB {
 }
 
 func (dao *Dao) scopeQueryAndOrder(wrapper *wrapper.Query) *gorm.DB {
-	if wrapper == nil {
-		return dao.db
-	}
-	fragments := wrapper.Build()
-	query, args, groupBys, orderBy := fragments[0].(string), fragments[1].([]interface{}), fragments[2].([]string), fragments[3].(string)
-	db := dao.db
-	if query != "" {
-		db = db.Where(query, args...)
-	}
-	if len(groupBys) > 0 {
-		groupBy := clause.GroupBy{Columns: make([]clause.Column, len(groupBys))}
-		for i := range groupBys {
-			group := groupBys[i]
-			fields := strings.FieldsFunc(group, utils.IsValidDBNameChar)
-			groupBy.Columns[i] = clause.Column{Name: group, Raw: len(fields) != 1}
-		}
-		db.Statement.AddClause(groupBy)
-	}
-	if orderBy != "" {
-		db = db.Order(orderBy)
-	}
-	return db
+	return wrapper.Scope(dao.db)
 }
 
 // 查询
