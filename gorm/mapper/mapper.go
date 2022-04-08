@@ -72,6 +72,7 @@ func List[T any](db *gorm.DB, cause *wrapper.Query, limit ...int) (records *[]T,
 	default:
 		db = db.Offset(limit[0]).Limit(limit[1])
 	}
+	records = new([]T)
 	err = db.Find(records).Error
 	return
 }
