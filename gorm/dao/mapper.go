@@ -19,6 +19,10 @@ func NewMapper[T any](db *gorm.DB) *Mapper[T] {
 	}
 }
 
+func ToMapper[T any](dao *Dao) *Mapper[T] {
+	return NewMapper[T](dao.DB())
+}
+
 func (dao *Mapper[T]) DB() *gorm.DB {
 	return dao.withModel()
 }
