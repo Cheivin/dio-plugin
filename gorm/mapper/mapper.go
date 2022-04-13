@@ -7,7 +7,10 @@ import (
 )
 
 func AutoMigrate[T any](db *gorm.DB, settings ...map[string]any) error {
-	model := new(T)
+	return Migrate(db, new(T), settings...)
+}
+
+func Migrate(db *gorm.DB, model any, settings ...map[string]any) error {
 	db = db.Model(model)
 	if len(settings) > 0 {
 		for i := range settings {
@@ -98,7 +101,7 @@ func Delete[T any](db *gorm.DB, cause *wrapper.Query) (int64, error) {
 }
 
 func Exist(db *gorm.DB, cause *wrapper.Query) (exist bool, err error) {
-	err = Where(db.Select("1"), cause).Find(cause, &exist).Error
+	err = Where(db.Select("1"), cause).Find(&exist).Error
 	return
 }
 
