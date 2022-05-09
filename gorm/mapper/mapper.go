@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"errors"
 	"github.com/cheivin/dio-plugin/gorm/wrapper"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -55,7 +56,10 @@ func GetOne[T any](db *gorm.DB, cause *wrapper.Query) (record *T, err error) {
 		cause = wrapper.Q()
 	}
 	record = new(T)
-	err = Where(db, cause).Limit(1).Find(record).Error
+	err = Where(db, cause).Limit(1).Take(record).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
 	return
 }
 
