@@ -70,7 +70,9 @@ func GetAll[T any](db *gorm.DB, cause *wrapper.Query) (records *[]T, err error) 
 }
 
 func List[T any](db *gorm.DB, cause *wrapper.Query, limit ...int) (records *[]T, err error) {
-	db = Where(db, cause)
+	if _, ok := db.Get("mapper_in_page"); !ok {
+		db = Where(db, cause)
+	}
 	switch len(limit) {
 	case 0:
 		db = db.Offset(0)
@@ -90,6 +92,7 @@ func Count(db *gorm.DB, cause *wrapper.Query) (total int64, err error) {
 }
 
 func Page[T any](db *gorm.DB, cause *wrapper.Query, page, size int) (records *[]T, total int64, err error) {
+	db = db.Set("mapper_in_page", true)
 	total, err = Count(db, cause)
 	if err != nil {
 		return
