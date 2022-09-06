@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/cheivin/di v0.2.0
 	github.com/cheivin/dio-core v0.1.0
+	github.com/cheivin/gorm-ext v1.0.0
 	gorm.io/driver/mysql v1.3.2
 	gorm.io/gorm v1.23.3
 )

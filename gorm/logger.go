@@ -10,9 +10,9 @@ import (
 )
 
 type gormLogger struct {
-	log                       core.Log      // `aware:""`
-	slowThreshold             time.Duration // `value:"gorm.log.slow-log"`
-	ignoreRecordNotFoundError bool          // `value:"gorm.log.ignore-notfound"`
+	log                       core.Log
+	slowThreshold             time.Duration
+	ignoreRecordNotFoundError bool
 	level                     logger.LogLevel
 }
 
@@ -28,7 +28,6 @@ func newLogger(log core.Log, property LogProperty) logger.Interface {
 // LogMode log mode
 func (l *gormLogger) LogMode(level logger.LogLevel) logger.Interface {
 	return &gormLogger{
-		//Level:                     int(level),
 		slowThreshold:             l.slowThreshold,
 		ignoreRecordNotFoundError: l.ignoreRecordNotFoundError,
 		level:                     level,

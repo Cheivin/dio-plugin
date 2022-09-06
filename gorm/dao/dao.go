@@ -3,7 +3,7 @@ package dao
 import (
 	"context"
 	"database/sql"
-	"github.com/cheivin/dio-plugin/gorm/wrapper"
+	"github.com/cheivin/gorm-ext/wrapper"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -13,7 +13,7 @@ type Dao struct {
 	dst interface{}
 }
 
-func (Dao) BeanName() string {
+func (*Dao) BeanName() string {
 	return "mysqlDao"
 }
 
